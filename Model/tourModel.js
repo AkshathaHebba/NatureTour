@@ -24,10 +24,10 @@ const tourSchema = new mongoose.Schema({
     default: 4.5,
   },
   discount: Number,
-  Summary: {
+  summary: {
     type: String,
     trim: true,
-    required: [true, 'A tour must have a description'],
+    required: [true, 'A tour must have a summary'],
   },
   ratingsQuantity: {
     type: Number,
@@ -46,6 +46,11 @@ const tourSchema = new mongoose.Schema({
     require: [true, 'A tour mus have a cover image'],
   },
   images: [String],
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
+  startDates: [Date],
 });
 const Tour = mongoose.model('Tour', tourSchema);
 module.exports = Tour;
