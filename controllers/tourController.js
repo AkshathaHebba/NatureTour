@@ -1,6 +1,7 @@
 // handlers are call controller in model view architecture
 const fs = require('fs');
 const Tour = require('../Model/tourModel');
+const APIFeatures = require('../Utils/apiFeatures');
 // const tours = JSON.parse(
 //   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
 // );
@@ -24,17 +25,70 @@ const Tour = require('../Model/tourModel');
 //   }
 //   next();
 // };
+
+exports.aliasTopTours = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+  next();
+};
 exports.getAllTours = async (req, res) => {
   try {
-    //Build a query
-    const queryObj = req.query; //need to destructure to create a copy otherwise it becomes pass by reference
-    const excludeFields = ['Page', 'sort', 'limit', 'fields'];
-    excludeFields.forEach((el) => delete queryObj[el]);
-    // const tours = await Tour.find(queryObj); //Tour.find() will return a query
-    const query = Tour.find(queryObj);
+    //1) Build a query
+    // eslint-disable-next-line node/no-unsupported-features/es-syntax
+    // const queryObj = { ...req.query }; //need to destructure to create a copy otherwise it becomes pass by reference
+    // const excludeFields = ['Page', 'sort', 'limit', 'fields'];
+    // excludeFields.forEach((el) => delete queryObj[el]);
+    // // const tours = await Tour.find(queryObj); //Tour.find() will return a query
+    //
+    // //2) [query filtering is done here] - Advanced filtering
+    // let queryStr = JSON.stringify(queryObj);
+    // queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`); //using regular expression
+    //
+    // //find will return query further we can chain function to filter record
+    // let query = Tour.find(JSON.parse(queryStr));
 
-    //excecute a query
-    const tours = await query;
+    //3) Sorting
+    // if (req.query.sort) {
+    //   const sortBy = req.query.sort.split(',').join(' ');
+    //   query = query.sort(sortBy);
+    // } else {
+    //   query = query.sort('-createdAt');
+    // }
+
+    //4) Feild Limiting
+    // if (req.query.fields) {
+    //   const fields = req.query.fields.split(',').join(' ');
+    //   query = query.select(fields);
+    // } else {
+    //   query = query.select('-__v');
+    // }
+
+    // 5)Pagination
+    //We should calculate skip value
+    // const pageNo = Number(req.query.page) || 1;
+    // const limitNo = Number(req.query.limit) || 100;
+    // const skip = (pageNo - 1) * limitNo;
+    // console.log(typeof pageNo, typeof limitNo);
+    // //use calculation here
+    // query = query.skip(skip).limit(limitNo);
+    //
+    // if (req.query.page) {
+    //   const numTours = await Tour.countDocuments();
+    //   if (skip >= numTours) {
+    //     throw new Error('This page does not Exisit☠️');
+    //   }
+    // }
+
+    //excecute a query - then we await a promise for the query
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .pagination();
+    console.log('🤡', features);
+    const tours = await features.query; //accessing object's variable
+    // const tours = await query;
     // const tours = await Tour.find()
     //   .where('duration')
     //   .equals(5)
@@ -50,13 +104,12 @@ exports.getAllTours = async (req, res) => {
   } catch (err) {
     res.status(404).json({
       status: 'fail',
-      message: err,
+      message: err.message,
     });
   }
 };
 
 exports.getTour = async (req, res) => {
-  console.log(req.query.test);
   const tour = await Tour.findById(req.params.id);
   try {
     res.status(200).json({

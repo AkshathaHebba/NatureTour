@@ -6,11 +6,14 @@ const router = express.Router();
 
 //middle ware
 // router.param('id', tourController.checkID);
+router
+  .route('/top-5-cheap')
+  .get(tourController.aliasTopTours, tourController.getAllTours); //middleware chaining
 
 router
   .route('/')
   .get(tourController.getAllTours)
-  .post(tourController.createTours); //middleware chaining
+  .post(tourController.createTours);
 
 router
   .route('/:id')
