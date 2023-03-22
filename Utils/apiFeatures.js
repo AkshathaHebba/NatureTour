@@ -16,7 +16,7 @@ class APIFeatures {
       /\b(gte|gt|lte|lt)\b/g,
       (match) => `$${match}`
     ); //using regular expression
-
+    console.log('😇', this.query);
     //find will return query further we can chain function to filter record
     this.query.find(JSON.parse(this.queryString));
     return this;
